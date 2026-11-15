@@ -1,0 +1,43 @@
+
+name: Compilar NITRO GAMING
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'NitroGaming.zip'
+      - '.github/workflows/android.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar proyecto
+        uses: actions/checkout@v4
+
+      - name: Preparar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Preparar Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Extraer proyecto
+        run: |
+          unzip NitroGaming.zip -d extracted
+
+      - name: Compilar APK
+        run: |
+          gradle -p extracted/NitroGaming assembleDebug
+
+      - name: Guardar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: NITRO-GAMING-APK
+          path: extracted/NitroGaming/app/build/outputs/apk/debug/app-debug.apk
+          
