@@ -585,7 +585,7 @@ private void addButton(LinearLayout container, String label, int bgColor, View.O
         addButton("← VOLVER AL PANEL PRINCIPAL", false, v -> showHome());
                               }
         
-    }
+    
     private void promptRootDpiDialog() {
         int currentDpi = getResources().getDisplayMetrics().densityDpi;
         EditText input = new EditText(this);
