@@ -258,7 +258,7 @@ public class MainActivity extends Activity {
     private void heading(String subtitle) {
         root.addView(text("👑 ORLANDO HACK 2.0 👑", 25, GOLD, true));
         root.addView(text(subtitle, 13, CYAN, true));
-        )
+    }
 private void addButton(LinearLayout container, String label, int bgColor, View.OnClickListener click) {
         Button b = new Button(this);
         b.setText(label);
