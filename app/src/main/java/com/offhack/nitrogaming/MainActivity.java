@@ -41,7 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends Activity {
-    private static final String YOUTUBE = "https://youtube.com";
+    private static final String YOUTUBE = "https://youtube.com/@offhackhack?si=pVtcVNBp8pgNEryq";
     private static final int REQ_PICK_AVATAR = 2026;
     private static final String AVATAR_FILE = "orlando_profile_avatar.png";
 
@@ -242,23 +242,7 @@ public class MainActivity extends Activity {
         setContentView(scroll);
         return root;
     }
-
-    private LinearLayout card() {
-        LinearLayout box = new LinearLayout(this);
-        box.setOrientation(LinearLayout.VERTICAL);
-        box.setBackgroundColor(PANEL);
-        box.setPadding(20, 18, 20, 18);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
-        lp.setMargins(0, 10, 0, 10);
-        root.addView(box, lp);
-        return box;
-    }
-
-    private void heading(String subtitle) {
-        root.addView(text("👑 ORLANDO HACK 2.0 👑", 25, GOLD, true));
-        root.addView(text(subtitle, 13, CYAN, true));
-
-    private void addButton(LinearLayout container, String label, int bgColor, View.OnClickListener click) {
+        private void addButton(LinearLayout container, String label, int bgColor, View.OnClickListener click) {
         Button b = new Button(this);
         b.setText(label);
         b.setAllCaps(false);
@@ -430,8 +414,10 @@ public class MainActivity extends Activity {
                 v -> openSettings(Settings.ACTION_DISPLAY_SETTINGS, "Desactiva el brillo automático para evitar caídas de brillo durante la partida."));
 
         addButton("← VOLVER AL PANEL PRINCIPAL", false, v -> showHome());
-                   }
-      private void showGameSelectorDialog() {
+    }
+    
+
+    private void showGameSelectorDialog() {
         PackageManager pm = getPackageManager();
         List<ApplicationInfo> apps = pm.getInstalledApplications(PackageManager.GET_META_DATA);
         List<String> labels = new ArrayList<>();
@@ -579,9 +565,8 @@ public class MainActivity extends Activity {
                 ));
 
         addButton("← VOLVER AL PANEL PRINCIPAL", false, v -> showHome());
-    }
-
-    private void promptRootDpiDialog() {
+                }
+        private void promptRootDpiDialog() {
         int currentDpi = getResources().getDisplayMetrics().densityDpi;
         EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_CLASS_NUMBER);
@@ -715,4 +700,4 @@ public class MainActivity extends Activity {
             Toast.makeText(this, "No se pudo abrir YouTube", Toast.LENGTH_SHORT).show();
         }
     }
-}
+                    }
