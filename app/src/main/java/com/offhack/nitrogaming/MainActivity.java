@@ -430,7 +430,161 @@ private void addButton(LinearLayout container, String label, int bgColor, View.O
                 PANEL_ALT,
                 v -> openSettings(Settings.ACTION_DISPLAY_SETTINGS, "Desactiva el brillo automático para evitar caídas de brillo durante la partida."));
 
+        addButton("← VOLVER AL PANEL PRINCIPAL", false, v -> showHome()); 
+    }
+        private void showGameSelectorDialog() {
+         PackageManager pm = getPackageManager();
+        List<ApplicationInfo> apps = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+        List<String> labels = new ArrayList<>();
+        List<String> packages = new ArrayList<>();
+
+        for (ApplicationInfo app : apps) {
+            if (pm.getLaunchIntentForPackage(app.packageName) == null) continue;
+            if (app.packageName.equals(getPackageName())) continue;
+
+            boolean isGame = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && app.category == ApplicationInfo.CATEGORY_GAME)
+                    || (app.flags & ApplicationInfo.FLAG_IS_GAME) != 0
+                    || app.packageName.toLowerCase().contains("freefire")
+                    || app.packageName.toLowerCase().contains("game")
+                    || app.packageName.toLowerCase().contains("pubg")
+                    || app.packageName.toLowerCase().contains("cod")
+                    || app.packageName.toLowerCase().contains("roblox")
+                    || app.packageName.toLowerCase().contains("minecraft");
+
+            if (isGame) {
+                labels.add("🎮 " + pm.getApplicationLabel(app).toString());
+                packages.add(app.packageName);
+            }
+        }
+
+        if (labels.isEmpty()) {
+            for (ApplicationInfo app : apps) {
+                if (pm.getLaunchIntentForPackage(app.packageName) == null) continue;
+                if (app.packageName.equals(getPackageName())) continue;
+                if ((app.flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
+                    labels.add(pm.getApplicationLabel(app).toString());
+                    packages.add(app.packageName);
+                }
+            }
+        }
+
+        if (labels.isEmpty()) {
+            Toast.makeText(this, "No se encontraron juegos instalados", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String[] items = new String[labels.size()];
+        labels.toArray(items);
+        new AlertDialog.Builder(this)
+                .setTitle("Selecciona tu juego favorito")
+                .setItems(items, (dialog, which) -> {
+                    String cleanName = labels.get(which).replace("🎮 ", "");
+                    prefs.edit()
+                            .putString(PREF_FAV_GAME_PKG, packages.get(which))
+                            .putString(PREF_FAV_GAME_NAME, cleanName)
+                            .apply();
+                    Toast.makeText(this, "Juego guardado: " + cleanName, Toast.LENGTH_SHORT).show();
+                    showGaming();
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void launchSelectedGame() {
+        String pkg = prefs.getString(PREF_FAV_GAME_PKG, "");
+        String name = prefs.getString(PREF_FAV_GAME_NAME, "Juego");
+        if (pkg.isEmpty()) {
+            showGameSelectorDialog();
+            return;
+        }
+
+        prefs.edit().putBoolean(PREF_GAMING_ACTIVE, true).apply();
+        System.gc();
+        try {
+            ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            if (am != null) {
+                am.killBackgroundProcesses(getPackageName());
+            }
+        } catch (Exception ignored) {}
+
+        Intent launchIntent = getPackageManager().getLaunchIntentForPackage(pkg);
+        if (launchIntent != null) {
+            Toast.makeText(this, "⚡ ORLANDO HACK 2.0: Lanzando " + name + "...", Toast.LENGTH_SHORT).show();
+            startActivity(launchIntent);
+        } else {
+            Toast.makeText(this, "No se pudo abrir " + name + ". Selecciónalo de nuevo.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void cleanBackgroundMemory() {
+        String before = getRamStatus();
+        System.gc();
+        try {
+            ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            if (am != null) {
+                am.killBackgroundProcesses(getPackageName());
+            }
+        } catch (Exception ignored) {}
+        String after = getRamStatus();
+        new AlertDialog.Builder(this)
+                .setTitle("Optimización de Memoria Completada")
+                .setMessage("Estado anterior: " + before + "\nEstado actual: " + after + "\n\nConsejo: Cierra manualmente las apps pesadas recientes antes de abrir tu juego.")
+                .setPositiveButton("Listo", (d, w) -> showGaming())
+                .show();
+    }
+
+    private void showRootMenu() {
+        onHomeScreen = false;
+        page();
+        heading("MÓDULO ROOT AVANZADO");
+
+        boolean hasRoot = isRootAvailable();
+        LinearLayout infoCard = card();
+        infoCard.addView(text("ESTADO DE SUPERUSUARIO (SU)", 13, GOLD, true));
+        infoCard.addView(text(hasRoot ? "✔ Binario ROOT detectado en el sistema" : "✖ ROOT no detectado (Requiere Magisk / KernelSU)", 15, hasRoot ? GREEN : ORANGE, true));
+        infoCard.addView(text("SEGURIDAD: Ningún comando se ejecutará sin tu confirmación explícita previa.", 12, MUTED, false));
+
+        addButton("1️⃣  CPU GOVERNOR: PERFORMANCE (Máxima frecuencia)", false, v ->
+                confirmRootAction(
+                        "Activar Gobernador CPU Performance",
+                        "Fija el gobernador de los núcleos de CPU en modo 'performance' para evitar caídas de frecuencia.\n\nComando a ejecutar:\nfor cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do echo performance > $cpu; done\n\nAdvertencia: Puede aumentar consumo y temperatura.",
+                        "for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do echo performance > $cpu; done"
+                ));
+
+        addButton("2️⃣  LIMPIEZA PROFUNDA DE CACHÉ DE KERNEL (drop_caches)", false, v ->
+                confirmRootAction(
+                        "Limpiar Caché de Página del Kernel",
+                        "Libera memoria caché del sistema Linux subyacente para dejar más RAM disponible.\n\nComando a ejecutar:\nsync && echo 3 > /proc/sys/vm/drop_caches\n\nEs seguro y reversible al reiniciar.",
+                        "sync && echo 3 > /proc/sys/vm/drop_caches"
+                ));
+
+        addButton("3️⃣  PRIORIDAD DE ENTRADA Y COMPOSITOR (SurfaceFlinger)", false, v ->
+                confirmRootAction(
+                        "Optimizar Latencia de Renderizado",
+                        "Ajusta propiedades temporales de superficie para reducir latencia táctil.\n\nComando a ejecutar:\nsetprop debug.sf.latch_unsignaled 1\n\nSe restablece automáticamente al reiniciar.",
+                        "setprop debug.sf.latch_unsignaled 1"
+                ));
+
+        addButton("4️⃣  LIMPIAR CACHÉ DE APPS DEL SISTEMA (pm trim-caches)", false, v ->
+                confirmRootAction(
+                        "Limpieza Global de Caché de Aplicaciones",
+                        "Solicita al gestor de paquetes liberar hasta 1 GB de archivos temporales acumulados por aplicaciones.\n\nComando a ejecutar:\npm trim-caches 1024M",
+                        "pm trim-caches 1024M"
+                ));
+
+        addButton("5️⃣  AJUSTE RÁPIDO DE DPI CON ROOT (wm density)", false, v ->
+                promptRootDpiDialog());
+
+        addButton("6️⃣  RESTAURAR CPU Y DPI POR DEFECTO", false, v ->
+                confirmRootAction(
+                        "Restaurar Gobernador CPU y Densidad Original",
+                        "Devuelve los núcleos de CPU a 'schedutil' y restablece el DPI original de pantalla.\n\nComando a ejecutar:\nfor cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do echo schedutil > $cpu; done && wm density reset",
+                        "for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do echo schedutil > $cpu; done && wm density reset"
+                ));
+
         addButton("← VOLVER AL PANEL PRINCIPAL", false, v -> showHome());
+                              }
+        
     }
     private void promptRootDpiDialog() {
         int currentDpi = getResources().getDisplayMetrics().densityDpi;
