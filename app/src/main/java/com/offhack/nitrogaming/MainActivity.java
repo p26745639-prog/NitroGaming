@@ -41,7 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends Activity {
-    private static final String YOUTUBE = "https://youtube.com/@offhackhack?si=pVtcVNBp8pgNEryq";
+    private static final String YOUTUBE = "https://youtube.com";
     private static final int REQ_PICK_AVATAR = 2026;
     private static final String AVATAR_FILE = "orlando_profile_avatar.png";
 
@@ -257,4 +257,312 @@ public class MainActivity extends Activity {
     private void heading(String subtitle) {
         root.addView(text("👑 ORLANDO HACK 2.0 👑", 25, GOLD, true));
         root.addView(text(subtitle, 13, CYAN, true));
-                
+        
+private void addButton(LinearLayout container, String label, int bgColor, View.OnClickListener click) {
+        Button b = new Button(this);
+        b.setText(label);
+        b.setAllCaps(false);
+        b.setTextSize(14);
+        b.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        b.setTextColor(WHITE);
+        b.setBackgroundTintList(ColorStateList.valueOf(bgColor));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
+        lp.setMargins(0, 8, 0, 8);
+        container.addView(b, lp);
+        b.setOnClickListener(click);
+    }
+
+    private void addButton(String label, boolean primary, View.OnClickListener click) {
+        addButton(root, label, primary ? PURPLE_NEON : PANEL, click);
+    }
+
+    private void showWelcome() {
+        onHomeScreen = false;
+        page();
+        heading("EDICIÓN REAL · POTENCIA GAMING");
+        root.addView(buildAvatarView(125));
+        root.addView(text("¡BIENVENIDO A ORLANDO HACK 2.0!", 21, WHITE, true));
+        root.addView(text("Apoya el canal oficial OFFHACK en YouTube y entra al nuevo panel con Perfiles Inteligentes, Lanzador Gaming y Módulo ROOT Seguro.", 14, MUTED, false));
+        addButton("▶  SUSCRIBIRME A OFFHACK", true, v -> openUrl(YOUTUBE));
+        addButton("⚡ ENTRAR AL PANEL 2.0", false, v -> showHome());
+        root.addView(text("Versión 2.0 · Morado Eléctrico & Dorado Corona", 12, GOLD, false));
+    }
+
+    private void showHome() {
+        onHomeScreen = true;
+        page();
+        heading("PANEL DE CONTROL GAMING 2.0");
+
+        LinearLayout devCard = card();
+        devCard.addView(buildAvatarView(96));
+        String device = Build.MANUFACTURER.toUpperCase() + " " + Build.MODEL;
+        devCard.addView(text("PERFIL GAMER · DISPOSITIVO DETECTADO", 12, GOLD, true));
+        devCard.addView(text(device, 18, WHITE, true));
+        devCard.addView(text("Android " + Build.VERSION.RELEASE + " · " + getRamStatus() + " · ROOT: " + (isRootAvailable() ? "DETECTADO" : "NO DETECTADO"), 12, MUTED, false));
+
+        String currentProfile = prefs.getString(PREF_PROFILE, "EQUILIBRADO");
+        LinearLayout profCard = card();
+        profCard.addView(text("PERFILES DE RENDIMIENTO", 15, GOLD, true));
+        profCard.addView(text("Perfil activo: " + currentProfile, 14, GREEN, true));
+        profCard.addView(text(getProfileDescription(currentProfile), 13, MUTED, false));
+
+        addButton(profCard,
+                (currentProfile.equals("AHORRO") ? "✔ " : "") + "🔋 PERFIL AHORRO (Batería y Temperatura)",
+                currentProfile.equals("AHORRO") ? Color.rgb(25, 135, 95) : PANEL_ALT,
+                v -> applyProfile("AHORRO"));
+
+        addButton(profCard,
+                (currentProfile.equals("EQUILIBRADO") ? "✔ " : "") + "⚖️ PERFIL EQUILIBRADO (Uso Diario / Estable)",
+                currentProfile.equals("EQUILIBRADO") ? BLUE_NEON : PANEL_ALT,
+                v -> applyProfile("EQUILIBRADO"));
+
+        addButton(profCard,
+                (currentProfile.equals("ALTO RENDIMIENTO") ? "✔ " : "") + "🚀 PERFIL ALTO RENDIMIENTO (Máxima Respuesta)",
+                currentProfile.equals("ALTO RENDIMIENTO") ? PURPLE_NEON : PANEL_ALT,
+                v -> applyProfile("ALTO RENDIMIENTO"));
+
+        boolean gamingOn = prefs.getBoolean(PREF_GAMING_ACTIVE, false);
+        addButton("🎮  MODO GAMING Y LANZADOR DE JUEGOS " + (gamingOn ? "[ACTIVO]" : "[OFF]"), true, v -> showGaming());
+        addButton("🛡️  OPTIMIZACIONES ROOT AVANZADAS (CON CONFIRMACIÓN)", false, v -> showRootMenu());
+        addButton("📘  GUÍA PARA ACTIVAR OPCIONES DE DESARROLLADOR", false, v -> showDeveloperGuide());
+        addButton("↩  RESTABLECER PARÁMETROS DE ORLANDO HACK", false, v -> confirmReset());
+        addButton("▶  YouTube · OFFHACK", false, v -> openUrl(YOUTUBE));
+    }
+
+    private void applyProfile(String profile) {
+        prefs.edit().putString(PREF_PROFILE, profile).apply();
+        String summary;
+        if (profile.equals("AHORRO")) {
+            summary = "Perfil AHORRO activado:\n• Animaciones recomendadas: 1x\n• Segundo plano: Conservador\n• Ideal para sesiones largas sin calentar el equipo.";
+        } else if (profile.equals("ALTO RENDIMIENTO")) {
+            summary = "Perfil ALTO RENDIMIENTO activado:\n• Animaciones recomendadas: 0.5x o Desactivadas\n• Respuesta táctil y puntero al máximo\n• Prioridad de memoria para juegos.";
+        } else {
+            summary = "Perfil EQUILIBRADO activado:\n• Animaciones recomendadas: 0.5x\n• Balance entre fluidez y autonomía\n• Recomendado para uso general.";
+        }
+        new AlertDialog.Builder(this)
+                .setTitle("Perfil " + profile)
+                .setMessage(summary + "\n\n¿Deseas abrir Opciones de desarrollador para aplicar las escalas de animación ahora?")
+                .setPositiveButton("Ir a Desarrollador", (d, w) -> openDeveloper("Ajusta las 3 escalas de animación según el perfil " + profile + "."))
+                .setNegativeButton("Solo guardar perfil", (d, w) -> showHome())
+                .show();
+    }
+
+    private String getProfileDescription(String profile) {
+        switch (profile) {
+            case "AHORRO":
+                return "Prioriza menor consumo energético, control térmico y procesos ligeros.";
+            case "ALTO RENDIMIENTO":
+                return "Prioriza respuesta táctil rápida, transiciones 0.5x y liberación de RAM.";
+            default:
+                return "Balance óptimo entre fluidez visual, estabilidad de FPS y batería.";
+        }
+    }
+
+    private void showGaming() {
+        onHomeScreen = false;
+        page();
+        heading("MODO GAMING · CENTRO DE CONTROL");
+
+        boolean gamingOn = prefs.getBoolean(PREF_GAMING_ACTIVE, false);
+        boolean dndHint = prefs.getBoolean(PREF_NO_DISTURB, false);
+        boolean sensBoost = prefs.getBoolean(PREF_SENS_BOOST, false);
+        String favPkg = prefs.getString(PREF_FAV_GAME_PKG, "");
+        String favName = prefs.getString(PREF_FAV_GAME_NAME, "Ningún juego seleccionado");
+
+        LinearLayout statusCard = card();
+        statusCard.addView(text("ESTADO DEL MODO GAMING", 13, GOLD, true));
+        statusCard.addView(text(gamingOn ? "● ACTIVADO Y LISTO PARA JUGAR" : "○ DESACTIVADO", 16, gamingOn ? GREEN : ORANGE, true));
+        statusCard.addView(text("RAM Disponible: " + getRamStatus(), 13, MUTED, false));
+
+        addButton(statusCard,
+                gamingOn ? "⏹ DESACTIVAR MODO GAMING" : "▶ ACTIVAR MODO GAMING",
+                gamingOn ? RED_WARN : Color.rgb(25, 135, 95),
+                v -> {
+                    boolean next = !gamingOn;
+                    prefs.edit().putBoolean(PREF_GAMING_ACTIVE, next).apply();
+                    Toast.makeText(this, next ? "MODO GAMING ACTIVADO" : "MODO GAMING DESACTIVADO", Toast.LENGTH_SHORT).show();
+                    showGaming();
+                });
+
+        LinearLayout launcherCard = card();
+        launcherCard.addView(text("🚀 LANZADOR DIRECTO DE JUEGOS", 14, GOLD, true));
+        launcherCard.addView(text("Juego seleccionado: " + favName, 13, CYAN, true));
+
+        addButton(launcherCard,
+                "🎯 ELEGIR JUEGO INSTALADO",
+                PANEL_ALT,
+                v -> showGameSelectorDialog());
+
+        addButton(launcherCard,
+                favPkg.isEmpty() ? "▶ SELECCIONA UN JUEGO ARRIBA PARA LANZAR" : "🔥 INICIAR " + favName.toUpperCase() + " CON BOOST",
+                favPkg.isEmpty() ? PANEL_ALT : PURPLE_NEON,
+                v -> launchSelectedGame());
+
+        LinearLayout controlsCard = card();
+        controlsCard.addView(text("CONTROLES PROPIOS DE SESIÓN", 14, GOLD, true));
+
+        addButton(controlsCard, "🧹 LIBERAR MEMORIA EN SEGUNDO PLANO", PANEL_ALT, v -> cleanBackgroundMemory());
+
+        addButton(controlsCard,
+                "🔕 MODO NO MOLESTAR: " + (dndHint ? "ACTIVADO" : "CONFIGURAR"),
+                PANEL_ALT,
+                v -> {
+                    prefs.edit().putBoolean(PREF_NO_DISTURB, !dndHint).apply();
+                    openSettings(Settings.ACTION_SOUND_SETTINGS, "Activa 'No molestar' para evitar notificaciones flotantes mientras juegas.");
+                });
+
+        addButton(controlsCard,
+                "🎯 ASISTENTE DE SENSIBILIDAD / DPI: " + (sensBoost ? "LISTO" : "AJUSTAR"),
+                PANEL_ALT,
+                v -> {
+                    prefs.edit().putBoolean(PREF_SENS_BOOST, true).apply();
+                    openDeveloper("Busca 'Ancho mínimo' (DPI) y 'Escalas de animación'. Anota tu valor original antes de subirlo.");
+                });
+
+        addButton(controlsCard,
+                "🖱 VELOCIDAD DEL PUNTERO Y CLIC AUTOMÁTICO",
+                PANEL_ALT,
+                v -> openSettings(Settings.ACTION_ACCESSIBILITY_SETTINGS, "Configura Tiempo de permanencia / Clic automático o busca Velocidad del puntero en Idioma y entrada."));
+
+        addButton(controlsCard,
+                "☀️ AJUSTES DE PANTALLA Y BRILLO FIJO",
+                PANEL_ALT,
+                v -> openSettings(Settings.ACTION_DISPLAY_SETTINGS, "Desactiva el brillo automático para evitar caídas de brillo durante la partida."));
+
+        addButton("← VOLVER AL PANEL PRINCIPAL", false, v -> showHome());
+    }
+    private void promptRootDpiDialog() {
+        int currentDpi = getResources().getDisplayMetrics().densityDpi;
+        EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_NUMBER);
+        input.setHint("Ejemplo: 440 (Actual: " + currentDpi + " dpi)");
+
+        new AlertDialog.Builder(this)
+                .setTitle("Configurar Densidad DPI (ROOT)")
+                .setMessage("DPI actual detectado: " + currentDpi + "\n\nIngresa el nuevo valor de densidad (entre 240 y 640). Luego te pediremos confirmación antes de ejecutar 'wm density'.")
+                .setView(input)
+                .setPositiveButton("Continuar", (d, w) -> {
+                    String val = input.getText().toString().trim();
+                    if (val.isEmpty()) return;
+                    int dpi = Integer.parseInt(val);
+                    if (dpi < 240 || dpi > 640) {
+                        Toast.makeText(this, "Por seguridad usa un valor entre 240 y 640", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    confirmRootAction(
+                            "Cambiar Densidad de Pantalla a " + dpi + " DPI",
+                            "Aplica una nueva densidad de pantalla inmediata.\n\nComando a ejecutar:\nwm density " + dpi + "\n\nPuedes revertirlo cuando quieras con la opción 6 ('wm density reset').",
+                            "wm density " + dpi
+                    );
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void confirmRootAction(String title, String details, String command) {
+        new AlertDialog.Builder(this)
+                .setTitle("⚠️ CONFIRMACIÓN DE SEGURIDAD ROOT")
+                .setMessage(title + "\n\n" + details + "\n\n¿Confirmas que deseas ejecutar este comando ROOT ahora?")
+                .setPositiveButton("SÍ, EJECUTAR CON ROOT", (d, w) -> executeRootCommand(title, command))
+                .setNegativeButton("CANCELAR", null)
+                .show();
+    }
+
+    private void executeRootCommand(String title, String command) {
+        try {
+            Process p = Runtime.getRuntime().exec("su");
+            DataOutputStream os = new DataOutputStream(p.getOutputStream());
+            os.writeBytes(command + "\n");
+            os.writeBytes("exit\n");
+            os.flush();
+            int exitCode = p.waitFor();
+            new AlertDialog.Builder(this)
+                    .setTitle(exitCode == 0 ? "✅ Comando ROOT Ejecutado" : "⚠️ Resultado ROOT (Código " + exitCode + ")")
+                    .setMessage("Acción: " + title + "\n\n" + (exitCode == 0
+                            ? "La modificación se aplicó correctamente."
+                            : "El kernel o SELinux bloqueó este parámetro específico en tu modelo, o se denegó el permiso su."))
+                    .setPositiveButton("Entendido", null)
+                    .show();
+        } catch (Exception e) {
+            new AlertDialog.Builder(this)
+                    .setTitle("❌ No se pudo ejecutar ROOT")
+                    .setMessage("Tu dispositivo no tiene acceso superusuario activo o Magisk/KernelSU rechazó la solicitud.\n\nDetalle: " + e.getMessage())
+                    .setPositiveButton("Cerrar", null)
+                    .show();
+        }
+    }
+
+    private boolean isRootAvailable() {
+        String[] paths = {"/system/bin/su", "/system/xbin/su", "/sbin/su", "/su/bin/su", "/magisk/.core/bin/su"};
+        for (String path : paths) {
+            if (new File(path).exists()) return true;
+        }
+        return false;
+    }
+
+    private String getRamStatus() {
+        try {
+            ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+            if (am != null) {
+                am.getMemoryInfo(mi);
+                long availMb = mi.availMem / (1024L * 1024L);
+                long totalMb = mi.totalMem / (1024L * 1024L);
+                return availMb + " MB libres / " + totalMb + " MB";
+            }
+        } catch (Exception ignored) {}
+        return "RAM disponible";
+    }
+
+    private void showDeveloperGuide() {
+        new AlertDialog.Builder(this)
+                .setTitle("Activar opciones de desarrollador")
+                .setMessage("1. Abre Ajustes del teléfono.\n2. Entra en Acerca del teléfono.\n3. Busca Versión de MIUI / HyperOS / OneUI o Número de compilación.\n4. Toca esa opción 7 veces hasta ver el aviso de desarrollador.\n5. Vuelve a Ajustes > Ajustes adicionales > Opciones de desarrollador.")
+                .setPositiveButton("Abrir ajustes", (d, w) -> openSettings(Settings.ACTION_SETTINGS, "Busca Acerca del teléfono para activar las opciones de desarrollador."))
+                .setNegativeButton("Cerrar", null)
+                .show();
+    }
+
+    private void openDeveloper(String help) {
+        try {
+            startActivity(new Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS));
+        } catch (Exception e) {
+            try {
+                startActivity(new Intent(Settings.ACTION_SETTINGS));
+            } catch (Exception ignored) {}
+        }
+        new AlertDialog.Builder(this).setTitle("Qué debes buscar").setMessage(help).setPositiveButton("Entendido", null).show();
+    }
+
+    private void openSettings(String action, String help) {
+        try {
+            startActivity(new Intent(action));
+        } catch (Exception e) {
+            startActivity(new Intent(Settings.ACTION_SETTINGS));
+        }
+        new AlertDialog.Builder(this).setTitle("Siguiente paso").setMessage(help).setPositiveButton("Entendido", null).show();
+    }
+
+    private void confirmReset() {
+        new AlertDialog.Builder(this)
+                .setTitle("Restablecer ORLANDO HACK 2.0")
+                .setMessage("Este botón restablecerá el perfil activo, el juego favorito, la foto de perfil y las preferencias guardadas dentro de la app.")
+                .setNegativeButton("Cancelar", null)
+                .setPositiveButton("Restablecer", (d, w) -> {
+                    prefs.edit().clear().apply();
+                    File avatar = new File(getFilesDir(), AVATAR_FILE);
+                    if (avatar.exists()) avatar.delete();
+                    Toast.makeText(this, "Preferencias de ORLANDO HACK 2.0 restablecidas", Toast.LENGTH_LONG).show();
+                    showHome();
+                })
+                .show();
+    }
+
+    private void openUrl(String url) {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+        } catch (Exception e) {
+            Toast.makeText(this, "No se pudo abrir YouTube", Toast.LENGTH_SHORT).show();
+        }
+    }
+            }
