@@ -80,7 +80,7 @@ public class MainActivity extends Activity {
         getWindow().setStatusBarColor(BG);
         getWindow().setNavigationBarColor(BG);StartAppSDK.init(this, "210323637", true);
 StartAppAd.showAd(this);
-        StartAppSDK.setTestAdsEnabled(true);
+        
         
         
         
