@@ -1,4 +1,4 @@
-plugins {
+1plugins {
     id 'com.android.application'
 }
 
@@ -27,5 +27,5 @@ android {
     }
 }
 dependencies {
-    implementation 'com.startapp:inapp-sdk:5.02'
+    implementation 'com.startapp:inapp-sdk:5.0.2'
 }
