@@ -35,6 +35,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.startapp.sdk.adsbase.StartAppSDK;
 import com.startapp.sdk.adsbase.StartAppAd;
+import com.startapp.sdk.ads.banner.Banner;
+
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -78,6 +80,10 @@ public class MainActivity extends Activity {
         getWindow().setStatusBarColor(BG);
         getWindow().setNavigationBarColor(BG);StartAppSDK.init(this, "210323637", true);
 StartAppAd.showAd(this);
+        StartAppSDK.setTestAdsEnabled(true);
+        
+        
+        
         
         prefs = getSharedPreferences("orlando_hack_v2", MODE_PRIVATE);
         showWelcome();
@@ -274,7 +280,11 @@ private void addButton(LinearLayout container, String label, int bgColor, View.O
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
         lp.setMargins(0, 8, 0, 8);
         container.addView(b, lp);
-        b.setOnClickListener(click);
+        b.setOnClickListener(v -> {
+    StartAppAd.showAd(this);
+    click.onClick(v);
+});
+    
     }
 
     private void addButton(String label, boolean primary, View.OnClickListener click) {
@@ -297,6 +307,8 @@ private void addButton(LinearLayout container, String label, int bgColor, View.O
         onHomeScreen = true;
         page();
         heading("PANEL DE CONTROL GAMING 2.0");
+        root.addView(new Banner(this));
+        
 
         LinearLayout devCard = card();
         devCard.addView(buildAvatarView(96));
