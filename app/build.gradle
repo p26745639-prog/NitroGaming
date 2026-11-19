@@ -25,3 +25,6 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 }
+dependencies {
+    implementation 'com.startapp:inapp-sdk:5.+'
+}
