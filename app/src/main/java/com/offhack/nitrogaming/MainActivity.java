@@ -33,6 +33,8 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.startapp.sdk.adsbase.StartAppSDK;
+import com.startapp.sdk.adsbase.StartAppAd;
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -74,7 +76,9 @@ public class MainActivity extends Activity {
     public void onCreate(Bundle state) {
         super.onCreate(state);
         getWindow().setStatusBarColor(BG);
-        getWindow().setNavigationBarColor(BG);
+        getWindow().setNavigationBarColor(BG);StartAppSDK.init(this, "210323637", true);
+StartAppAd.showAd(this);
+        
         prefs = getSharedPreferences("orlando_hack_v2", MODE_PRIVATE);
         showWelcome();
     }
